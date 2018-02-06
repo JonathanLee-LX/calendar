@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>日历</title>
+    <style type="text/css">
+        body {
+            color: black;
+            font-family: 'Microsoft YaHei';
+            font-size: 1.3em;
+        }
+
+        #calendar {
+            width: 700px;
+            height: 350px;
+            margin: 100px auto;
+            box-sizing: border-box;
+        }
+
+        .nav {
+            width: 100%;
+            height: 50px;
+            background-color: darkcyan;
+            line-height: 50px;
+            text-align: center;
+        }
+
+        .date {
+            display: inline-block;
+        }
+
+        .date input {
+            background-color: transparent;
+            border: 0;
+            line-height: 50px;
+            font-size: 1.2em;
+        }
+
+        .date input:focus {
+            background-color: azure;
+            outline: none;
+        }
+
+        .year {
+            width: 3em;
+        }
+
+        .month {
+            width: 2em;
+        }
+
+        .day {
+            background-color: rgb(0, 112, 112);
+            font-size: 0.9em;
+            font-weight: bolder;
+        }
+
+        .item {
+            width: 100px;
+            height: 50px;
+            float: left;
+            line-height: 50px;
+            text-align: center;
+        }
+
+        .item:hover {
+            border: 1px solid #ccc;
+            background-color: darkcyan;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .middle {
+            background-color: azure;
+        }
+
+        .today {
+            background-color: rgb(7, 177, 177);
+        }
+
+        .front,
+        .end {
+            background-color: #ddd;
+            color: #808080;
+        }
+
+        .control {
+            text-align: center;
+        }
+
+        .control button {
+            font-size: 1.5em;
+            border: 0;
+            background-color: darkcyan;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="calendar">
+        <div>
+            <div class="nav">
+                <div class="date">
+                    <input type="number" v-model='year' v-on:input='goTo()' v-on:blur='restore()' class="year" min="1900" max="2100">
+                    <label for="month">年</label>
+                </div>
+                <div class="date">
+                    <input type="number" v-model='month' v-on:input='goTo()' v-on:blur='restore()' class="month" min="1" max="12">
+                    <label for="month">月</label>
+                </div>
+            </div>
+            <div v-for='day in week' class="item day">{{day}}</div>
+            <div v-for='date in dates.front' class="item front">{{date.getDate()}}</div>
+            <div v-for='date in dates.middle' class="item middle" v-bind:class='{ today: date.isToday}'>{{date.getDate()}}</div>
+            <div v-for='date in dates.end' class="item end">{{date.getDate()}}</div>
+        </div>
+        <div class="control">
+            <button @click='pre()'>前一个月</button>
+            <button @click='backToday()'>回到今天</button>
+            <button @click='next()'>下一个月</button>
+        </div>
+    </div>
+    <script src="https://cdn.bootcss.com/vue/2.5.13/vue.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript">
+        var date = new Date();
+        var monthDates = getMonthDates(date);
+        var completeMonthDates = completeMonthMap(monthDates);
+        // console.log(completeMonthDates)
+        var vm = new Vue({
+            el: "#calendar",
+            data: {
+                dates: completeMonthDates,
+                week: ['星期天', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+                date: date,
+                now: new Date(),
+                show: false,
+                show1: false,
+                year: date.getFullYear(),
+                month: date.getMonth() + 1
+            },
+            methods: {
+                getMonth: function () {
+                    return this.date.getMonth() + 1;
+                },
+                getYear: function () {
+                    return this.date.getFullYear();
+                },
+                pre: function () {
+                    var month = this.date.getMonth() - 1 >= 0 ? this.date.getMonth() - 1 : 11;
+                    var year = this.date.getFullYear();
+                    if (month == 11) {
+                        year -= 1;
+                    }
+                    this.date = new Date(year, month);
+                    var monthDates = getMonthDates(this.date);
+                    this.dates = completeMonthMap(monthDates);
+                    this.year = year;
+                    this.month = month + 1 ? month + 1 : 12;
+                },
+                next: function () {
+                    var month = this.date.getMonth() + 1 < 12 ? this.date.getMonth() + 1 : 0;
+                    var year = this.date.getFullYear();
+                    if (month == 0) {
+                        year += 1;
+                    }
+                    this.date = new Date(year, month);
+                    var monthDates = getMonthDates(this.date);
+                    this.dates = completeMonthMap(monthDates);
+                    this.year = year;
+                    this.month = month + 1;
+                },
+                backToday: function () {
+                    this.now = new Date();
+                    var monthDates = getMonthDates(this.now);
+                    this.dates = completeMonthMap(monthDates);
+                    this.date = date;
+                    this.month = date.getMonth() + 1;
+                    this.year = date.getFullYear();
+                },
+                goTo: function () {
+                    // 当输入框为空时直接返回
+                    if (!this.month || !this.year) {
+                        return;
+                    } else if (this.month > 12 || this.month < 0 || typeof(parseInt(this.month)) != 'number') {
+                        return;
+                    } else if (this.year < 1900 || this.year > 2100 || typeof(parseInt(this.year)) != 'number') {
+                        return;
+                    }
+                    console.log('sss')
+                    var date = new Date(this.year, this.month - 1);
+                    var monthDates = getMonthDates(date);
+                    this.dates = completeMonthMap(monthDates);
+                    this.date = date;
+                },
+                restore: function () {
+                    if (!this.month || !this.year) {
+                        this.month = this.date.getMonth() + 1;
+                        this.year = this.date.getFullYear();
+                    } else if (this.month > 12 || this.month < 0) {
+                        this.month = this.date.getMonth()+1;
+                        return;
+                    } else if (this.year < 1900) {
+                        this.year = this.date.getFullYear();
+                        return;
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
