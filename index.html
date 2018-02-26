@@ -18,6 +18,7 @@
             height: 350px;
             margin: 100px auto;
             box-sizing: border-box;
+            position: relative;
         }
 
         .nav {
@@ -88,6 +89,9 @@
         }
 
         .control {
+            position: fixed;
+            left: 30%;
+            bottom: 0;
             text-align: center;
         }
 
@@ -96,6 +100,46 @@
             border: 0;
             background-color: darkcyan;
             cursor: pointer;
+        }
+
+        .container {
+            width: 100%;
+            height: 300px;
+            position: absolute;
+        }
+
+        .list-complete-enter-active {
+            animation-name: fold-in;
+            animation-duration: 1s;
+        }
+
+        .list-complete-leave-active {
+            animation-name: fold-out;
+            animation-duration: .5s;
+        }
+
+        @keyframes fold-in {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(50%);
+            }
+            100% {
+                transform: scale(100%);
+            }
+        }
+
+        @keyframes fold-out {
+            0% {
+                transform: scale(100%);
+            }
+            50% {
+                transform: scale(50%);
+            }
+            100% {
+                transform: scale(0);
+            }
         }
     </style>
 </head>
@@ -113,10 +157,12 @@
                     <label for="month">月</label>
                 </div>
             </div>
-            <div v-for='day in week' class="item day">{{day}}</div>
-            <div v-for='date in dates.front' class="item front">{{date.getDate()}}</div>
-            <div v-for='date in dates.middle' class="item middle" v-bind:class='{ today: date.isToday}'>{{date.getDate()}}</div>
-            <div v-for='date in dates.end' class="item end">{{date.getDate()}}</div>
+            <transition-group name="list-complete" tag="div" mode="out-in" class="container">
+                <div v-for='day in week' class="item day" v-bind:key="day">{{day}}</div>
+                <div v-for='date in dates.front' class="item front" v-bind:key="date.getTime()">{{date.getDate()}}</div>
+                <div v-for='date in dates.middle' class="item middle" v-bind:key="date.getTime()" v-bind:class='{ today: date.isToday}'>{{date.getDate()}}</div>
+                <div v-for='date in dates.end' class="item end" v-bind:key="date.getTime()">{{date.getDate()}}</div>
+            </transition-group>
         </div>
         <div class="control">
             <button @click='pre()'>前一个月</button>
@@ -186,12 +232,13 @@
                     // 当输入框为空时直接返回
                     if (!this.month || !this.year) {
                         return;
-                    } else if (this.month > 12 || this.month < 0 || typeof(parseInt(this.month)) != 'number') {
+                    } else if (this.month > 12 || this.month < 0 || typeof (parseInt(this.month)) !=
+                        'number') {
                         return;
-                    } else if (this.year < 1900 || this.year > 2100 || typeof(parseInt(this.year)) != 'number') {
+                    } else if (this.year < 1900 || this.year > 2100 || typeof (parseInt(this.year)) !=
+                        'number') {
                         return;
                     }
-                    console.log('sss')
                     var date = new Date(this.year, this.month - 1);
                     var monthDates = getMonthDates(date);
                     this.dates = completeMonthMap(monthDates);
@@ -202,7 +249,7 @@
                         this.month = this.date.getMonth() + 1;
                         this.year = this.date.getFullYear();
                     } else if (this.month > 12 || this.month < 0) {
-                        this.month = this.date.getMonth()+1;
+                        this.month = this.date.getMonth() + 1;
                         return;
                     } else if (this.year < 1900) {
                         this.year = this.date.getFullYear();
