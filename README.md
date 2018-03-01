@@ -1,2 +1,2 @@
-# calendar
-A simply calendar application.
+# 使用Vue框架制作的一个日历web程序
+一个简单的日历web程序，目前只有公历.
